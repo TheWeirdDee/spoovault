@@ -660,6 +660,7 @@ mod cross_chain_revocation {
 /// `upgrade_contract` (Wasm code replacement) and `migrate`.
 mod upgrade_governance {
     use super::*;
+    use soroban_sdk::Error as SdkError;
 
     /// The "new version" of the contract, imported as raw Wasm and uploaded
     /// via `env.deployer().upload_contract_wasm` to give `upgrade_contract`
@@ -742,7 +743,12 @@ mod upgrade_governance {
         let not_admin = Address::generate(&env);
         let some_hash = BytesN::from_array(&env, &[7u8; 32]);
         let result = client.try_upgrade_contract(&not_admin, &some_hash);
-        assert_eq!(result, Err(Ok(UpgradeError::UnauthorizedAdmin)));
+        assert_eq!(
+            result,
+            Err(Ok(SdkError::from_contract_error(
+                UpgradeError::UnauthorizedAdmin as u32
+            )))
+        );
     }
 
     #[test]
@@ -755,7 +761,12 @@ mod upgrade_governance {
         let caller = Address::generate(&env);
         let some_hash = BytesN::from_array(&env, &[7u8; 32]);
         let result = client.try_upgrade_contract(&caller, &some_hash);
-        assert_eq!(result, Err(Ok(UpgradeError::NotInitialized)));
+        assert_eq!(
+            result,
+            Err(Ok(SdkError::from_contract_error(
+                UpgradeError::NotInitialized as u32
+            )))
+        );
     }
 
     #[test]
@@ -793,7 +804,12 @@ mod upgrade_governance {
         client.upgrade_contract(&admin_a, &some_hash);
 
         let result = client.try_upgrade_contract(&admin_a, &some_hash);
-        assert_eq!(result, Err(Ok(UpgradeError::AlreadyApproved)));
+        assert_eq!(
+            result,
+            Err(Ok(SdkError::from_contract_error(
+                UpgradeError::AlreadyApproved as u32
+            )))
+        );
     }
 
     #[test]
@@ -850,7 +866,12 @@ mod upgrade_governance {
 
         let not_admin = Address::generate(&env);
         let result = client.try_migrate(&not_admin);
-        assert_eq!(result, Err(Ok(UpgradeError::UnauthorizedAdmin)));
+        assert_eq!(
+            result,
+            Err(Ok(SdkError::from_contract_error(
+                UpgradeError::UnauthorizedAdmin as u32
+            )))
+        );
     }
 
     #[test]

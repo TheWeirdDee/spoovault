@@ -21,17 +21,28 @@ jobs:
       - name: Install dependencies (for OpenZeppelin imports)
         run: npm install --legacy-peer-deps
 
-      # The echidna image ships solc-select but starts with no version
-      # selected, so plain `echidna-test` fails before it ever reads the
-      # harness ("No solc version set"). Select the same solc version the
-      # rest of the repo builds with (hardhat.config.cjs) before fuzzing.
+      # The echidna image ships solc-select, but its bundled solc-select
+      # (an old Python 3.8 build) hits `HTTP 403` calling GitHub's release
+      # API to validate the requested version before installing it, so
+      # `solc-select install` fails before echidna ever runs. Sidestep it by
+      # downloading the exact solc build directly (same version pinned in
+      # hardhat.config.cjs) and pointing crytic-compile at it via
+      # fuzz/echidna/config.yaml's `cryticArgs: --solc`.
+      - name: Download solc 0.8.24
+        run: |
+          curl -sL -o solc-static-linux "https://github.com/ethereum/solidity/releases/download/v0.8.24/solc-static-linux"
+          chmod +x solc-static-linux
+
       - name: Run Echidna campaign
         run: |
           docker run --rm \
             -v "$PWD":/src -w /src \
-            --entrypoint bash \
+            --entrypoint echidna-test \
             trailofbits/echidna:v2.2.3 \
-            -c "solc-select install 0.8.24 && solc-select use 0.8.24 && echidna-test /src/fuzz/harness/SpooVaultFuzz.sol --contract SpooVaultFuzz --config /src/fuzz/echidna/config.yaml --test-mode property"
+            /src/fuzz/harness/SpooVaultFuzz.sol \
+            --contract SpooVaultFuzz \
+            --config /src/fuzz/echidna/config.yaml \
+            --test-mode property
 
   medusa:
     name: Medusa (Solidity invariant fuzzing)

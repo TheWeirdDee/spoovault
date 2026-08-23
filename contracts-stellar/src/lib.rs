@@ -664,7 +664,7 @@ impl SpooVaultStellar {
             .get(&DataKey::IsGuardian(vault_id, uploader.clone()))
             .unwrap_or(false);
         assert!(is_guard, "Only guardians can upload documents");
-        assert!(ipfs_hash.len() > 0, "IPFS hash required");
+        assert!(!ipfs_hash.is_empty(), "IPFS hash required");
         assert!(
             guardians_list.len() == shares.len(),
             "Guardians list and shares count mismatch"

@@ -9,3 +9,8 @@ format: text
 stopOnFail: true
 # Keep CI runtime bounded.
 timeout: 300
+cryticArgs:
+  - "--solc"
+  - "/src/solc-static-linux"
+  - "--solc-remaps"
+  - "@openzeppelin/=/src/node_modules/@openzeppelin/"
